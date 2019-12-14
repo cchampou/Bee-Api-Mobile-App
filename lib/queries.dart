@@ -1,12 +1,22 @@
-
 class Queries {
-  static String getLooma = """
+  static getHive(String id) {
+  return """
     query GetLooma {
-      beehive(where: {id: {_eq: "96d446f2-5fa9-4af4-92ec-05b4a103fcfb"}}) {
+      beehive(where: {id: {_eq: "$id"}}) {
         name
         weight
         supers
       }
     }
   """;
+  }
+  static String getAll = """
+    query GetAll {
+      beehive {
+        id
+        name
+      }
+    }
+  """;
 }
+
