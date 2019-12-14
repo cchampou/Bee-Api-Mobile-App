@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bee_api/graphQl.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:flutter/services.dart';
 import 'package:bee_api/queries.dart';
 
 void main() => runApp(MyApp());
@@ -9,6 +10,12 @@ void main() => runApp(MyApp());
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
+      statusBarColor: Colors.yellow,
+    ));
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark.copyWith(
+      statusBarColor: Colors.yellow,
+    ));
     return MaterialApp(
       title: 'Bee API',
       theme: ThemeData(
