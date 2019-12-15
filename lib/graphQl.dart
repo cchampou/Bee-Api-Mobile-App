@@ -3,10 +3,10 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 
 class GraphQlObject {
   static HttpLink httpLink = HttpLink(
-    uri: 'https://beeapi.herokuapp.com/v1alpha1/graphql',
+    uri: 'https://beeapi.herokuapp.com/v1/graphql',
   );
-  static AuthLink authLink = AuthLink();
-  static Link link = httpLink;
+  static AuthLink authLink;
+  static Link link = authLink.concat(httpLink);
   static ValueNotifier<GraphQLClient> client = ValueNotifier(
     GraphQLClient(
       cache: InMemoryCache(),

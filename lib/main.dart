@@ -1,7 +1,6 @@
+import 'package:bee_api/pages/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:bee_api/pages/homepage.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,7 +18,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.yellow,
       ),
-      home: HomePage(),
+      home: LoginPage(),
     );
   }
 }
