@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bee_api/graphQl.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 
 class _LoginData {
   String email = '';
@@ -23,8 +24,52 @@ class _LoginPageState extends State<LoginPage> {
   String token;
 
   String _message = '';
+  bool _loading = false;
+
+  Future<FirebaseUser> _handleFacebookSignIn() async {
+    _toggleLoading(true);
+    try {
+      final facebookLogin = FacebookLogin();
+      final result = await facebookLogin.logIn(['email']);
+      switch (result.status) {
+        case FacebookLoginStatus.loggedIn:
+          print('ok${result.accessToken.token}');
+
+          final credentials = FacebookAuthProvider.getCredential(
+              accessToken: result.accessToken.token);
+
+          user = (await _auth.signInWithCredential(credentials)).user;
+          token = (await user.getIdToken()).token;
+
+          GraphQlObject.authLink = AuthLink(getToken: () => 'Bearer $token');
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => HomePage()));
+
+          return user;
+          break;
+        case FacebookLoginStatus.cancelledByUser:
+          print('cancelled');
+          break;
+        case FacebookLoginStatus.error:
+          print(result.errorMessage);
+          break;
+      }
+
+      _toggleLoading(false);
+      return null;
+    } catch (exception) {
+      if (this.mounted) {
+        setState(() {
+          _loading = false;
+          _message = exception.toString();
+        });
+      }
+      return null;
+    }
+  }
 
   Future<FirebaseUser> _handleSignIn() async {
+    _toggleLoading(true);
     try {
       user = (await _auth.signInWithEmailAndPassword(
               email: _data.email, password: _data.password))
@@ -35,9 +80,25 @@ class _LoginPageState extends State<LoginPage> {
           context, MaterialPageRoute(builder: (context) => HomePage()));
       return user;
     } catch (exception) {
-      print('fail: $exception');
-      _message = exception.toString();
+      _toggleLoading(false);
+      _setMessage(exception.toString());
       return null;
+    }
+  }
+
+  _setMessage(target) {
+    if (_message != target && this.mounted) {
+      setState(() {
+        _message = target;
+      });
+    }
+  }
+
+  _toggleLoading(target) {
+    if (this.mounted) {
+      setState(() {
+        _loading = target;
+      });
     }
   }
 
@@ -46,12 +107,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint(this._message);
     return Scaffold(
-        appBar: AppBar(
-          title: Text(this._message),
-          centerTitle: true,
-        ),
+        backgroundColor: Colors.yellow,
         body: Container(
           margin: EdgeInsets.all(30),
           child: Form(
@@ -68,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                         return null;
                       },
                       onChanged: (value) {
-                        this._message = '';
+                        _setMessage('');
                       },
                       onSaved: (value) {
                         this._data.email = value;
@@ -85,22 +142,42 @@ class _LoginPageState extends State<LoginPage> {
                         return null;
                       },
                       onChanged: (value) {
-                        this._message = '';
+                        _setMessage('');
                       },
                       onSaved: (value) {
                         this._data.password = value;
                       },
                     ),
-                    FlatButton(
-                        child: Text('Se connecter'),
-                        color: Colors.blue,
-                        textColor: Colors.white,
-                        onPressed: () {
-                          if (this._formKey.currentState.validate()) {
-                            this._formKey.currentState.save();
-                            this._handleSignIn();
-                          }
-                        }),
+                    Container(
+                      margin: EdgeInsets.all(30),
+                      child: FlatButton(
+                          child:
+                              Text(_loading ? 'Chargement...' : 'Se connecter'),
+                          color: Colors.black87,
+                          textColor: Colors.white,
+                          onPressed: () {
+                            if (!_loading &&
+                                this._formKey.currentState.validate()) {
+                              this._formKey.currentState.save();
+                              this._handleSignIn();
+                            }
+                          }),
+                    ),
+                    Container(
+                      margin: EdgeInsets.all(30),
+                      child: FlatButton(
+                          child: Text(_loading
+                              ? 'Chargement...'
+                              : 'Se connecter avec Facebook'),
+                          color: Colors.blueAccent,
+                          textColor: Colors.white,
+                          onPressed: () {
+                            if (!_loading) {
+                              this._formKey.currentState.save();
+                              this._handleFacebookSignIn();
+                            }
+                          }),
+                    ),
                     _message != null ? Text(_message) : null,
                   ].where((o) => o != null).toList())),
         ));

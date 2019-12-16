@@ -1,3 +1,4 @@
+import 'package:bee_api/components/drawer.dart';
 import 'package:bee_api/pages/details.dart';
 import 'package:bee_api/pages/login.dart';
 import 'package:flutter/material.dart';
@@ -60,6 +61,7 @@ class _HomePageState extends State<HomePage> {
               final beehives = result.data['beehives'];
 
               return Scaffold(
+                  drawer: MainDrawer(),
                   appBar: AppBar(
                     title: Text('Les ruches'),
                     centerTitle: true,
