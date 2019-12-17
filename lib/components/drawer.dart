@@ -11,7 +11,6 @@ class MainDrawer extends StatelessWidget {
           ListTile(title: Text('Les ruches'), leading: Icon(Icons.archive)),
           ListTile(title: Text('Mes favoris'), leading: Icon(Icons.favorite)),
           ListTile(title: Text('Paramètres'), leading: Icon(Icons.settings)),
-          ListTile(title: Text('Quitter'), leading: Icon(Icons.exit_to_app)),
         ],
       ),
     );

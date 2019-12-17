@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:bee_api/graphQl.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class _LoginData {
   String email = '';
@@ -17,7 +18,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final facebookLogin = FacebookLogin();
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   FirebaseUser user;
 
@@ -29,11 +33,9 @@ class _LoginPageState extends State<LoginPage> {
   Future<FirebaseUser> _handleFacebookSignIn() async {
     _toggleLoading(true);
     try {
-      final facebookLogin = FacebookLogin();
       final result = await facebookLogin.logIn(['email']);
       switch (result.status) {
         case FacebookLoginStatus.loggedIn:
-          print('ok${result.accessToken.token}');
 
           final credentials = FacebookAuthProvider.getCredential(
               accessToken: result.accessToken.token);
@@ -57,6 +59,36 @@ class _LoginPageState extends State<LoginPage> {
 
       _toggleLoading(false);
       return null;
+    } catch (exception) {
+      if (this.mounted) {
+        setState(() {
+          _loading = false;
+          _message = exception.toString();
+        });
+      }
+      return null;
+    }
+  }
+
+  Future<FirebaseUser> _handleGoogleSignIn() async {
+    _toggleLoading(true);
+    try {
+      final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.getCredential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
+      token = (await user.getIdToken()).token;
+
+      GraphQlObject.authLink = AuthLink(getToken: () => 'Bearer $token');
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => HomePage()));
+
+      return user;
     } catch (exception) {
       if (this.mounted) {
         setState(() {
@@ -164,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                           }),
                     ),
                     Container(
-                      margin: EdgeInsets.all(30),
+                      margin: EdgeInsets.all(10),
                       child: FlatButton(
                           child: Text(_loading
                               ? 'Chargement...'
@@ -175,6 +207,21 @@ class _LoginPageState extends State<LoginPage> {
                             if (!_loading) {
                               this._formKey.currentState.save();
                               this._handleFacebookSignIn();
+                            }
+                          }),
+                    ),
+                    Container(
+                      margin: EdgeInsets.all(10),
+                      child: FlatButton(
+                          child: Text(_loading
+                              ? 'Chargement...'
+                              : 'Se connecter avec Google (not available yet)'),
+                          color: Colors.white,
+                          textColor: Colors.blue,
+                          onPressed: () {
+                            if (!_loading) {
+                              this._formKey.currentState.save();
+                              this._handleGoogleSignIn();
                             }
                           }),
                     ),
