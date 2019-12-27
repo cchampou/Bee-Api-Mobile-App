@@ -42,7 +42,6 @@ class _LoginPageState extends State<LoginPage> {
 
           user = (await _auth.signInWithCredential(credentials)).user;
           token = (await user.getIdToken()).token;
-
           GraphQlObject.authLink = AuthLink(getToken: () => 'Bearer $token');
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => HomePage()));

@@ -61,5 +61,9 @@
         <string>fbauth2</string>
         <string>fbshareextension</string>
     </array>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Pick image of beehives to upload them and associate them to beehives in the database</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Take image of beehives to upload them and associate them to beehives in the database</string>
 </dict>
 </plist>

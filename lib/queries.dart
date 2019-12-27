@@ -4,9 +4,12 @@ import "package:gql/ast.dart" as ast;
 class Queries {
   static getHive(String id) {
     return lang.parseString("""
-    query GetLooma {
+    query getHive {
       beehives(where: {id: {_eq: "$id"}}) {
         name
+        image {
+          filename
+        }
         weight
         supers
         tempIn

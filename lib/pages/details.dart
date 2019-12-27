@@ -1,9 +1,12 @@
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 import 'package:graphql_flutter/graphql_flutter.dart';
 
 import 'package:bee_api/queries.dart';
 import 'package:bee_api/graphQl.dart';
+
+import 'package:bee_api/components/imageCapture.dart';
 
 class DetailsPage extends StatefulWidget {
   final String id;
@@ -17,6 +20,11 @@ class DetailsPage extends StatefulWidget {
 class _DetailsPageState extends State<DetailsPage> {
   bool notNull(Object o) => o != null;
 
+  String imageUrl;
+
+  final FirebaseStorage _storage =
+      FirebaseStorage(storageBucket: 'gs://bee-api-7e7b5.appspot.com');
+
   @override
   Widget build(BuildContext context) {
     return GraphQLProvider(
@@ -29,6 +37,7 @@ class _DetailsPageState extends State<DetailsPage> {
           builder: (QueryResult result,
               {VoidCallback refetch, FetchMore fetchMore}) {
             if (result.exception != null) {
+              debugPrint(result.exception.toString());
               return Scaffold(
                 body: Center(
                     child: Text('Oups, impossible de charger les données')),
@@ -42,6 +51,15 @@ class _DetailsPageState extends State<DetailsPage> {
             }
 
             final String name = result.data['beehives'][0]['name'];
+            final String image = result.data['beehives'][0]['image']['filename'];
+            if (imageUrl == null) {
+              _storage.ref().child(image).getDownloadURL().then((url) {
+                setState(() {
+                  imageUrl = url;
+                });
+              });
+            }
+
             final String weight =
                 result.data['beehives'][0]['weight'].toString();
             final String supers =
@@ -50,8 +68,7 @@ class _DetailsPageState extends State<DetailsPage> {
                 result.data['beehives'][0]['tempIn'].toString();
             final String tempOut =
                 result.data['beehives'][0]['tempOut'].toString();
-            final String food =
-              result.data['beehives'][0]['food'].toString();
+            final String food = result.data['beehives'][0]['food'].toString();
 
             return Scaffold(
               appBar: AppBar(
@@ -64,7 +81,13 @@ class _DetailsPageState extends State<DetailsPage> {
                 ],
               ),
               floatingActionButton: FloatingActionButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ImageCapture(),
+                      ));
+                },
                 child: Icon(Icons.build),
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
@@ -72,9 +95,8 @@ class _DetailsPageState extends State<DetailsPage> {
               body: Center(
                   child: ListView(
                       children: [
-                Image(
-                  image: AssetImage('assets/sample.jpg'),
-                ),
+                if (imageUrl != null)
+                  Image.network(imageUrl),
                 ListTile(
                   title: Text('$weight kg'),
                   leading: Icon(Icons.archive),
@@ -91,10 +113,12 @@ class _DetailsPageState extends State<DetailsPage> {
                         leading: Icon(Icons.whatshot),
                       )
                     : null,
-                        (tempIn != 'null') ? ListTile(
-                  title: Text('position'),
-                  leading: Icon(Icons.gps_fixed),
-                ) : null,
+                (tempIn != 'null')
+                    ? ListTile(
+                        title: Text('position'),
+                        leading: Icon(Icons.gps_fixed),
+                      )
+                    : null,
                 ListTile(
                   title: Text(food),
                   leading: Icon(Icons.restaurant),
